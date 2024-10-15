@@ -2,39 +2,44 @@ package com.example.aplicativo_fitnessapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 
+// ColorScheme
 private val LightColors = lightColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Color(0xFF1E88E5),
+    secondary = Color(0xFFB2DFDB),
+    background = Color.White,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = Color.Black,
+    onBackground = Color.Black,
+    onSurface = Color.Black,
 )
 
-private val AppTypography = Typography(
-    headlineLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp
-    )
+private val DarkColors = darkColorScheme(
+    primary = Color(0xFF1E88E5),
+    secondary = Color(0xFFB2DFDB),
+    background = Color.Black,
+    surface = Color.Black,
+    onPrimary = Color.Black,
+    onSecondary = Color.White,
+    onBackground = Color.White,
+    onSurface = Color.White,
 )
 
 @Composable
-fun FitnessAppTheme(
-    content: @Composable () -> Unit
-) {
+fun AplicativoFitnessAppTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
+    val colorScheme = if (darkTheme) {
+        DarkColors
+    } else {
+        LightColors
+    }
     MaterialTheme(
-        colorScheme = LightColors,
-        typography = AppTypography,
+        colorScheme = colorScheme,
+        typography = Typography,
         content = content
     )
 }

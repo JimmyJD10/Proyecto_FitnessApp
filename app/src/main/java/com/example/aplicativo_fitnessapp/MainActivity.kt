@@ -1,78 +1,113 @@
 package com.example.aplicativo_fitnessapp
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.example.aplicativo_fitnessapp.ui.theme.FitnessAppTheme
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.aplicativo_fitnessapp.ui.screens.LoginScreen
+import com.example.aplicativo_fitnessapp.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
 
 class MainActivity : ComponentActivity() {
 
+    private val authViewModel: AuthViewModel by viewModels()
+    private lateinit var googleSignInClient: GoogleSignInClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configuración de Google Sign-In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
         setContent {
-            FitnessAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen(context = this@MainActivity)
-                }
+            val isLoggedIn by authViewModel.isLoggedIn.collectAsState(initial = false)
+
+            if (isLoggedIn) {
+                HomeScreen(onLogout = { authViewModel.signOut() })
+            } else {
+                WelcomeScreen(
+                    onGetStarted = {
+                        setContent {
+                            LoginScreen(
+                                authViewModel = authViewModel,
+                                onGoogleSignIn = { signInWithGoogle() },
+                                onNavigateToRegister = {
+                                    // Navegar a la pantalla de registro
+                                    var showRegisterScreen = true
+                                },
+                                onLoginSuccess = {
+                                    setContent {
+                                        HomeScreen(onLogout = { authViewModel.signOut() })
+                                    }
+                                }
+                            )
+                        }
+                    },
+                    onLogin = {
+                        setContent {
+                            LoginScreen(
+                                authViewModel = authViewModel,
+                                onGoogleSignIn = { signInWithGoogle() },
+                                onNavigateToRegister = {
+                                    // Navegar a la pantalla de registro
+                                    var showRegisterScreen = true
+                                },
+                                onLoginSuccess = {
+                                    setContent {
+                                        HomeScreen(onLogout = { authViewModel.signOut() })
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
             }
         }
     }
-}
 
-@Composable
-fun MainScreen(context: Context) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Welcome to Fitness App",
-            style = MaterialTheme.typography.headlineLarge
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = {
-            val intent = Intent(context, DashboardActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Start")
-        }
+    private fun signInWithGoogle() {
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    FitnessAppTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Welcome to Fitness App",
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Button(onClick = { /* No-op in preview */ }) {
-                Text("Start")
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        authViewModel.signInWithCredential(credential) { success ->
+            if (success) {
+                // Usuario autenticado exitosamente
+            } else {
+                // Manejar error de autenticación
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)!!
+                firebaseAuthWithGoogle(account.idToken!!)
+            } catch (e: ApiException) {
+                // Manejar el error de autenticación
+            }
+        }
+    }
+
+    companion object {
+        private const val RC_SIGN_IN = 9001
     }
 }
