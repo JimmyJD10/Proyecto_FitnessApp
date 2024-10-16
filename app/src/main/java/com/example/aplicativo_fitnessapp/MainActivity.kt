@@ -7,7 +7,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.aplicativo_fitnessapp.HomeScreen
 import com.example.aplicativo_fitnessapp.ui.screens.LoginScreen
+import com.example.aplicativo_fitnessapp.ui.screens.RegisterScreen
 import com.example.aplicativo_fitnessapp.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -32,47 +37,34 @@ class MainActivity : ComponentActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         setContent {
+            // Variable para controlar la navegación a la pantalla de registro
+            var showRegisterScreen by remember { mutableStateOf(false) }
             val isLoggedIn by authViewModel.isLoggedIn.collectAsState(initial = false)
 
             if (isLoggedIn) {
-                HomeScreen(onLogout = { authViewModel.signOut() })
-            } else {
-                WelcomeScreen(
-                    onGetStarted = {
-                        setContent {
-                            LoginScreen(
-                                authViewModel = authViewModel,
-                                onGoogleSignIn = { signInWithGoogle() },
-                                onNavigateToRegister = {
-                                    // Navegar a la pantalla de registro
-                                    var showRegisterScreen = true
-                                },
-                                onLoginSuccess = {
-                                    setContent {
-                                        HomeScreen(onLogout = { authViewModel.signOut() })
-                                    }
-                                }
-                            )
-                        }
-                    },
-                    onLogin = {
-                        setContent {
-                            LoginScreen(
-                                authViewModel = authViewModel,
-                                onGoogleSignIn = { signInWithGoogle() },
-                                onNavigateToRegister = {
-                                    // Navegar a la pantalla de registro
-                                    var showRegisterScreen = true
-                                },
-                                onLoginSuccess = {
-                                    setContent {
-                                        HomeScreen(onLogout = { authViewModel.signOut() })
-                                    }
-                                }
-                            )
-                        }
-                    }
+                HomeScreen(
+                    authViewModel = authViewModel,
+                    onLogout = { authViewModel.signOut() }
                 )
+            } else {
+                if (showRegisterScreen) {
+                    RegisterScreen(
+                        authViewModel = authViewModel,
+                        onRegistrationSuccess = {
+                            // Al registrarse exitosamente, vuelve a la pantalla de inicio de sesión
+                            showRegisterScreen = false
+                        }
+                    )
+                } else {
+                    LoginScreen(
+                        authViewModel = authViewModel,
+                        onGoogleSignIn = { signInWithGoogle() },
+                        onNavigateToRegister = { showRegisterScreen = true },  // Navegar a la pantalla de registro
+                        onLoginSuccess = {
+                            // No se necesita acción especial aquí porque ya estamos observando `isLoggedIn`
+                        }
+                    )
+                }
             }
         }
     }
@@ -86,7 +78,7 @@ class MainActivity : ComponentActivity() {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         authViewModel.signInWithCredential(credential) { success ->
             if (success) {
-                // Usuario autenticado exitosamente
+                // Usuario autenticado exitosamente, la pantalla cambiará automáticamente por el estado `isLoggedIn`
             } else {
                 // Manejar error de autenticación
             }

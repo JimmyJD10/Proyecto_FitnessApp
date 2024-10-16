@@ -31,16 +31,17 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var showPasswordResetMessage by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     // Colores personalizados
-    val backgroundColor = Color(0xFFB2DFDB) // Fondo verde claro (un tono de verde suave)
-    val primaryColor = Color(0xFF1E88E5) // Color primario
+    val backgroundColor = Color(0xFFB2DFDB)
+    val primaryColor = Color(0xFF1E88E5)
     val textColor = Color.White
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor) // Fondo verde claro
+            .background(backgroundColor)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -62,24 +63,13 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Inicio de Sesión",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1E88E5),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
         TextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Correo Electrónico", color = Color.Black) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.White, // Fondo de campo oscuro
+                containerColor = Color.White,
                 cursorColor = primaryColor,
                 focusedIndicatorColor = primaryColor,
                 unfocusedIndicatorColor = Color.Gray,
@@ -97,7 +87,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
             colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.White, // Fondo de campo oscuro
+                containerColor = Color.White,
                 cursorColor = primaryColor,
                 focusedIndicatorColor = primaryColor,
                 unfocusedIndicatorColor = Color.Gray,
@@ -108,25 +98,35 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                authViewModel.signInWithEmail(email, password) { success, message ->
-                    if (success) {
-                        onLoginSuccess()
+        if (isLoading) {
+            CircularProgressIndicator(color = primaryColor)
+        } else {
+            Button(
+                onClick = {
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        isLoading = true
+                        authViewModel.signInWithEmail(email, password) { success, message ->
+                            isLoading = false
+                            if (success) {
+                                onLoginSuccess()
+                            } else {
+                                errorMessage = message
+                            }
+                        }
                     } else {
-                        errorMessage = message
+                        errorMessage = "Por favor, completa todos los campos."
                     }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = primaryColor
-            ),
-            shape = RoundedCornerShape(50.dp) // Bordes redondeados
-        ) {
-            Text("Iniciar Sesión", color = textColor)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryColor
+                ),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Text("Iniciar Sesión", color = textColor)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,8 +140,8 @@ fun LoginScreen(
             IconButton(
                 onClick = { onGoogleSignIn() },
                 modifier = Modifier
-                    .size(64.dp) // Tamaño del icono
-                    .background(Color(0xFFB2DFDB), shape = CircleShape) // Fondo blanco circular
+                    .size(64.dp)
+                    .background(Color(0xFFB2DFDB), shape = CircleShape)
                     .padding(8.dp)
             ) {
                 Image(
@@ -164,11 +164,11 @@ fun LoginScreen(
                 if (email.isNotEmpty()) {
                     authViewModel.sendPasswordResetEmail(email) { success, message ->
                         if (success) {
-                            showPasswordResetMessage = true
+                            showPasswordResetMessage = true // Cambia el estado a verdadero
                             errorMessage = ""
                         } else {
                             errorMessage = message
-                            showPasswordResetMessage = false
+                            showPasswordResetMessage = false // Cambia el estado a falso
                         }
                     }
                 } else {
@@ -184,6 +184,7 @@ fun LoginScreen(
             Text(text = "Correo de recuperación enviado.", color = Color.Green)
         }
 
+
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = { onNavigateToRegister() }) {
@@ -191,3 +192,4 @@ fun LoginScreen(
         }
     }
 }
+
