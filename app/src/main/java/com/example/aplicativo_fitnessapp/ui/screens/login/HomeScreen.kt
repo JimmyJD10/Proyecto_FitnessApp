@@ -1,4 +1,4 @@
-package com.example.aplicativo_fitnessapp
+package com.example.aplicativo_fitnessapp.ui.screens.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button

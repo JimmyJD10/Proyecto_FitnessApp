@@ -61,6 +61,24 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
+
+    // Jetpack Compose libraries
+    implementation("androidx.compose.material3:material3:1.1.0") // Solo una versión de Material 3
+    implementation("androidx.compose.material:material:1.5.0")
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+    implementation("androidx.navigation:navigation-compose:2.7.1") // Última versión de Navigation Compose
+
+    // Lottie for Compose
+    implementation("com.airbnb.android:lottie-compose:6.5.2")
+
+    // Firebase Authentication
+    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Google Authentication
+    implementation("com.google.android.gms:play-services-auth:20.6.0")
+
+    // Testing and debugging dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,19 +86,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
-
-    // Firebase Authentication
-    implementation("com.google.firebase:firebase-auth-ktx")
-
-    // Google Authentication
-    implementation("com.google.android.gms:play-services-auth:20.6.0")
-
-    // Eliminar las líneas relacionadas con Facebook
-    // implementation("com.facebook.android:facebook-login:17.0.2")
-    // implementation("com.facebook.android:facebook-android-sdk:[17.0.2]")
-    // Twitter Login (si no lo necesitas, puedes eliminarlo también)
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4") // Si estás usando vistas tradicionales
 }

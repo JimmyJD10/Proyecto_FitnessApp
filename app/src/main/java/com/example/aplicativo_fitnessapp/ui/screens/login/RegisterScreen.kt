@@ -1,4 +1,4 @@
-package com.example.aplicativo_fitnessapp.ui.screens
+package com.example.aplicativo_fitnessapp.ui.screens.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -50,11 +50,11 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            authViewModel.registerWithEmail(email, password) { success, message ->
+            authViewModel.registerWithEmail(email, password) { success ->
                 if (success) {
                     onRegistrationSuccess()
                 } else {
-                    errorMessage = message
+                    errorMessage = "Error al registrar. Verifica los datos e intenta nuevamente."
                 }
             }
         }) {

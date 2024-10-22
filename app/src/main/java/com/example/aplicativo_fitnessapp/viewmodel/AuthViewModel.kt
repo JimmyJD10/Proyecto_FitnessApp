@@ -6,76 +6,116 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
-class AuthViewModel(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) : ViewModel() {
-    private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn = _isLoggedIn.asStateFlow()
+class AuthViewModel : ViewModel() {
 
-    var user: FirebaseUser? = null
-        private set
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    // Inicia sesión con credenciales
-    fun signInWithCredential(credential: AuthCredential, callback: (Boolean) -> Unit) {
-        auth.signInWithCredential(credential)
+    // Estados de autenticación para observar en la UI
+    private val _isLoggedIn = MutableStateFlow(firebaseAuth.currentUser != null)
+    val isLoggedIn: StateFlow<Boolean> get() = _isLoggedIn
+
+    private val _currentUser = MutableStateFlow(firebaseAuth.currentUser)
+    val currentUser: StateFlow<FirebaseUser?> get() = _currentUser
+
+    // Iniciar sesión con correo y contraseña
+    fun signInWithEmail(email: String, password: String, onResult: (Boolean) -> Unit) {
+        firebaseAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                viewModelScope.launch {
-                    _isLoggedIn.value = task.isSuccessful
-                    if (task.isSuccessful) {
-                        user = auth.currentUser
-                    }
-                    callback(task.isSuccessful)
+                if (task.isSuccessful) {
+                    Log.d("AuthViewModel", "Inicio de sesión exitoso")
+                    _isLoggedIn.value = true
+                    _currentUser.value = firebaseAuth.currentUser
+                    onResult(true)
+                } else {
+                    Log.e("AuthViewModel", "Error en el inicio de sesión", task.exception)
+                    onResult(false)
                 }
             }
     }
 
-    // Registro con email y contraseña
-    fun registerWithEmail(email: String, password: String, callback: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try {
-                auth.createUserWithEmailAndPassword(email, password).await()
-                user = auth.currentUser
-                _isLoggedIn.value = true
-                callback(true, "Registro exitoso.")
-            } catch (e: Exception) {
-                callback(false, e.message ?: "Error en el registro.")
-            }
-        }
-    }
-
-    // Inicio de sesión con email y contraseña
-    fun signInWithEmail(email: String, password: String, callback: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            try {
-                auth.signInWithEmailAndPassword(email, password).await()
-                user = auth.currentUser
-                _isLoggedIn.value = true
-                callback(true, "Inicio de sesión exitoso.")
-            } catch (e: Exception) {
-                callback(false, e.message ?: "Error en el inicio de sesión.")
-            }
-        }
-    }
-
-    // Recuperar contraseña
-    fun sendPasswordResetEmail(email: String, callback: (Boolean, String) -> Unit) {
-        auth.sendPasswordResetEmail(email)
+    // Registrar un nuevo usuario con correo y contraseña
+    fun registerWithEmail(email: String, password: String, onResult: (Boolean) -> Unit) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    callback(true, "Correo de recuperación enviado.")
+                    Log.d("AuthViewModel", "Registro de usuario exitoso")
+                    _isLoggedIn.value = true
+                    _currentUser.value = firebaseAuth.currentUser
+                    onResult(true)
                 } else {
-                    callback(false, task.exception?.message ?: "Error al enviar el correo.")
+                    Log.e("AuthViewModel", "Error en el registro de usuario", task.exception)
+                    onResult(false)
+                }
+            }
+    }
+
+    // Enviar correo de restablecimiento de contraseña
+    fun sendPasswordResetEmail(email: String, onResult: (Boolean) -> Unit) {
+        firebaseAuth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("AuthViewModel", "Correo de restablecimiento enviado")
+                    onResult(true)
+                } else {
+                    Log.e("AuthViewModel", "Error al enviar correo de restablecimiento", task.exception)
+                    onResult(false)
+                }
+            }
+    }
+
+    // Registrar nombre de usuario después de la creación de cuenta
+    fun updateProfile(displayName: String, onResult: (Boolean) -> Unit) {
+        val user = firebaseAuth.currentUser
+        if (user != null) {
+            val profileUpdates = UserProfileChangeRequest.Builder()
+                .setDisplayName(displayName)
+                .build()
+
+            user.updateProfile(profileUpdates)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("AuthViewModel", "Nombre de usuario actualizado")
+                        _currentUser.value = firebaseAuth.currentUser
+                        onResult(true)
+                    } else {
+                        Log.e("AuthViewModel", "Error al actualizar nombre de usuario", task.exception)
+                        onResult(false)
+                    }
+                }
+        }
+    }
+
+    // Iniciar sesión con credenciales de Google
+    fun signInWithCredential(credential: AuthCredential, onResult: (Boolean) -> Unit) {
+        firebaseAuth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("AuthViewModel", "Inicio de sesión con Google exitoso")
+                    _isLoggedIn.value = true
+                    _currentUser.value = firebaseAuth.currentUser
+                    onResult(true)
+                } else {
+                    Log.e("AuthViewModel", "Error en el inicio de sesión con Google", task.exception)
+                    onResult(false)
                 }
             }
     }
 
     // Cerrar sesión
     fun signOut() {
-        auth.signOut()
+        firebaseAuth.signOut()
         _isLoggedIn.value = false
-        user = null
+        _currentUser.value = null
+    }
+
+    // Verificar si el usuario está autenticado al iniciar la app
+    init {
+        _isLoggedIn.value = firebaseAuth.currentUser != null
+        _currentUser.value = firebaseAuth.currentUser
     }
 }

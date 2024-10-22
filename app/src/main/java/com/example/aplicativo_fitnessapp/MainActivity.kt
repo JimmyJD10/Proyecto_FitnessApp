@@ -10,9 +10,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.aplicativo_fitnessapp.HomeScreen
-import com.example.aplicativo_fitnessapp.ui.screens.LoginScreen
-import com.example.aplicativo_fitnessapp.ui.screens.RegisterScreen
+import com.example.aplicativo_fitnessapp.ui.screens.login.HomeScreen
+import com.example.aplicativo_fitnessapp.ui.screens.login.LoginScreen
+import com.example.aplicativo_fitnessapp.ui.screens.login.RegisterScreen
+import com.example.aplicativo_fitnessapp.ui.screens.login.WelcomeScreen
 import com.example.aplicativo_fitnessapp.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -37,17 +38,32 @@ class MainActivity : ComponentActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         setContent {
-            // Variable para controlar la navegación a la pantalla de registro
+            // Variables para controlar la navegación entre pantallas
             var showRegisterScreen by remember { mutableStateOf(false) }
+            var showWelcomeScreen by remember { mutableStateOf(true) }
             val isLoggedIn by authViewModel.isLoggedIn.collectAsState(initial = false)
 
-            if (isLoggedIn) {
-                HomeScreen(
-                    authViewModel = authViewModel,
-                    onLogout = { authViewModel.signOut() }
-                )
-            } else {
-                if (showRegisterScreen) {
+            when {
+                // Pantalla de bienvenida
+                showWelcomeScreen -> {
+                    WelcomeScreen(
+                        onSignInClick = {
+                            showWelcomeScreen = false // Navega a la pantalla de inicio de sesión
+                        },
+                        onRegisterClick = {
+                            showRegisterScreen = true // Navega a la pantalla de registro
+                            showWelcomeScreen = false // Oculta la pantalla de bienvenida
+                        }
+                    )
+                }
+                // Pantalla de inicio de sesión o de registro
+                isLoggedIn -> {
+                    HomeScreen(
+                        authViewModel = authViewModel,
+                        onLogout = { authViewModel.signOut() }
+                    )
+                }
+                showRegisterScreen -> {
                     RegisterScreen(
                         authViewModel = authViewModel,
                         onRegistrationSuccess = {
@@ -55,13 +71,15 @@ class MainActivity : ComponentActivity() {
                             showRegisterScreen = false
                         }
                     )
-                } else {
+                }
+                else -> {
                     LoginScreen(
                         authViewModel = authViewModel,
                         onGoogleSignIn = { signInWithGoogle() },
-                        onNavigateToRegister = { showRegisterScreen = true },  // Navegar a la pantalla de registro
+                        onNavigateToRegister = { showRegisterScreen = true },
                         onLoginSuccess = {
-                            // No se necesita acción especial aquí porque ya estamos observando `isLoggedIn`
+                            // Navega a HomeScreen después de un inicio de sesión exitoso
+                            showWelcomeScreen = false
                         }
                     )
                 }
@@ -69,37 +87,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Función para manejar el inicio de sesión con Google
     private fun signInWithGoogle() {
         val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        startActivityForResult(signInIntent, REQUEST_CODE_GOOGLE_SIGN_IN)
     }
 
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        authViewModel.signInWithCredential(credential) { success ->
-            if (success) {
-                // Usuario autenticado exitosamente, la pantalla cambiará automáticamente por el estado `isLoggedIn`
-            } else {
-                // Manejar error de autenticación
-            }
-        }
-    }
-
+    // Manejo del resultado de Google Sign-In
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == RC_SIGN_IN) {
+        if (requestCode == REQUEST_CODE_GOOGLE_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
-                val account = task.getResult(ApiException::class.java)!!
-                firebaseAuthWithGoogle(account.idToken!!)
+                val account = task.getResult(ApiException::class.java)
+                if (account != null) {
+                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                    authViewModel.signInWithCredential(credential) { success ->
+                        if (success) {
+                            // Maneja el éxito del inicio de sesión
+                        }
+                    }
+                }
             } catch (e: ApiException) {
-                // Manejar el error de autenticación
+                // Maneja el error de inicio de sesión
+                e.printStackTrace()
             }
         }
     }
 
     companion object {
-        private const val RC_SIGN_IN = 9001
+        private const val REQUEST_CODE_GOOGLE_SIGN_IN = 1001
     }
 }

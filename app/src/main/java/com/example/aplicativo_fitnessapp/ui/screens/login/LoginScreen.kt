@@ -1,4 +1,4 @@
-package com.example.aplicativo_fitnessapp.ui.screens
+package com.example.aplicativo_fitnessapp.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -105,12 +105,12 @@ fun LoginScreen(
                 onClick = {
                     if (email.isNotEmpty() && password.isNotEmpty()) {
                         isLoading = true
-                        authViewModel.signInWithEmail(email, password) { success, message ->
+                        authViewModel.signInWithEmail(email, password) { success ->
                             isLoading = false
                             if (success) {
                                 onLoginSuccess()
                             } else {
-                                errorMessage = message
+                                errorMessage = "Error al iniciar sesión. Por favor, verifica tus credenciales."
                             }
                         }
                     } else {
@@ -162,13 +162,13 @@ fun LoginScreen(
         TextButton(
             onClick = {
                 if (email.isNotEmpty()) {
-                    authViewModel.sendPasswordResetEmail(email) { success, message ->
+                    authViewModel.sendPasswordResetEmail(email) { success ->
                         if (success) {
-                            showPasswordResetMessage = true // Cambia el estado a verdadero
+                            showPasswordResetMessage = true
                             errorMessage = ""
                         } else {
-                            errorMessage = message
-                            showPasswordResetMessage = false // Cambia el estado a falso
+                            errorMessage = "No se pudo enviar el correo de recuperación. Intenta de nuevo."
+                            showPasswordResetMessage = false
                         }
                     }
                 } else {
@@ -184,7 +184,6 @@ fun LoginScreen(
             Text(text = "Correo de recuperación enviado.", color = Color.Green)
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = { onNavigateToRegister() }) {
@@ -192,4 +191,3 @@ fun LoginScreen(
         }
     }
 }
-
