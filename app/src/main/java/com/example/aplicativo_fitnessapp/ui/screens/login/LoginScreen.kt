@@ -2,6 +2,7 @@ package com.example.aplicativo_fitnessapp.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,16 @@ import com.example.aplicativo_fitnessapp.viewmodel.AuthViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.aplicativo_fitnessapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,19 +40,24 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showPasswordResetMessage by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
     // Colores personalizados
-    val backgroundColor = Color(0xFFB2DFDB)
-    val primaryColor = Color(0xFF1E88E5)
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF101422), // Color superior
+            Color(0xFF272B38)  // Color inferior
+        )
+    )
     val textColor = Color.White
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(gradientBrush)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -50,7 +66,7 @@ fun LoginScreen(
             text = "FITNESS APP",
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
-            color = primaryColor,
+            color = Color(0xFF24C4E6),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = 16.dp)
         )
@@ -69,11 +85,11 @@ fun LoginScreen(
             label = { Text("Correo Electrónico", color = Color.Black) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.White,
-                cursorColor = primaryColor,
-                focusedIndicatorColor = primaryColor,
+                containerColor = Color(0xFF588BB8),
+                cursorColor = textColor,
+                focusedIndicatorColor = textColor,
                 unfocusedIndicatorColor = Color.Gray,
-                focusedLabelColor = primaryColor,
+                focusedLabelColor = textColor,
                 unfocusedLabelColor = Color.Gray
             )
         )
@@ -85,21 +101,30 @@ fun LoginScreen(
             onValueChange = { password = it },
             label = { Text("Contraseña", color = Color.Black) },
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.White,
-                cursorColor = primaryColor,
-                focusedIndicatorColor = primaryColor,
+                containerColor = Color(0xFF588BB8),
+                cursorColor = Color.White,
+                focusedIndicatorColor = Color.White,
                 unfocusedIndicatorColor = Color.Gray,
-                focusedLabelColor = primaryColor,
+                focusedLabelColor = Color.White,
                 unfocusedLabelColor = Color.Gray
+            ),
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña")
+                }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
-            CircularProgressIndicator(color = primaryColor)
+            CircularProgressIndicator(color = textColor)
         } else {
             Button(
                 onClick = {
@@ -121,11 +146,11 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor
+                    containerColor = Color(0xFF35B4CF)
                 ),
                 shape = RoundedCornerShape(50.dp)
             ) {
-                Text("Iniciar Sesión", color = textColor)
+                Text("Iniciar Sesión", color = Color.Black)
             }
         }
 
@@ -141,7 +166,6 @@ fun LoginScreen(
                 onClick = { onGoogleSignIn() },
                 modifier = Modifier
                     .size(64.dp)
-                    .background(Color(0xFFB2DFDB), shape = CircleShape)
                     .padding(8.dp)
             ) {
                 Image(
@@ -176,18 +200,13 @@ fun LoginScreen(
                 }
             }
         ) {
-            Text("¿Olvidaste tu contraseña?", color = Color.Black)
+            Text("¿Olvidaste tu contraseña?", color = Color.White)
         }
 
         if (showPasswordResetMessage) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Correo de recuperación enviado.", color = Color.Green)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextButton(onClick = { onNavigateToRegister() }) {
-            Text("¿No tienes una cuenta? Crea una aquí", color = Color.Black)
+            Text(text = "Correo de recuperación enviado.", color = Color.White)
         }
     }
 }
+

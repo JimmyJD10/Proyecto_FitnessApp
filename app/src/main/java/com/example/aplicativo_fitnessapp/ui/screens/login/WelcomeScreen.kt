@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,81 +24,88 @@ fun WelcomeScreen(
     onSignInClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    // Colores personalizados
-    val backgroundColor = Color(0xFFF0F0F0) // Fondo claro
-    val textColor = Color.Black // Texto oscuro
+    // Colores del degradado
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF101422), // Color superior
+            Color(0xFF272B38)  // Color inferior
+        )
+    )
 
-    // Estructura principal
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor) // Fondo claro
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(gradientBrush) // fondo degradado
+            .padding(16.dp)
     ) {
-        // Título de la app
-        Text(
-            text = "FITNESS",
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        )
-
-        // Espacio entre el título y la animación
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Animación Lottie centrada
-        val composition by rememberLottieComposition(LottieCompositionSpec.Asset("Animation_-_1729129889323.json"))
-        val progress by animateLottieCompositionAsState(composition, iterations = LottieConstants.IterateForever)
-
-        LottieAnimation(
-            composition = composition,
-            progress = { progress },
-            modifier = Modifier
-                .size(400.dp) // Ajustar tamaño si es necesario
-                .padding(bottom = 16.dp)
-        )
-
-        // Espacio entre la animación y los botones
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Botones de Iniciar Sesión y Registrarse
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween // Distribuye el contenido uniformemente
         ) {
-            Button(
-                onClick = { onSignInClick() },
+            Text(
+                text = "FITNESS APP",
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF24C4E6),
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .width(200.dp) // Ancho personalizado
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD50404) // Color rojo
-                ),
-                shape = RoundedCornerShape(50.dp)
-            ) {
-                Text("Iniciar Sesión", color = Color.White)
-            }
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // Animación Lottie centrada
+            val composition by rememberLottieComposition(LottieCompositionSpec.Asset("Inicio_run.json"))
+            val progress by animateLottieCompositionAsState(composition, iterations = LottieConstants.IterateForever)
 
-            Button(
-                onClick = { onRegisterClick() },
+            LottieAnimation(
+                composition = composition,
+                progress = { progress },
                 modifier = Modifier
-                    .width(200.dp)
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD50404) // Color rojo
-                ),
-                shape = RoundedCornerShape(50.dp)
+                    .sizeIn(maxHeight = 300.dp) // Ajuste máximo de altura para la animación
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+
+            // Botones de Iniciar Sesión y Registrarse
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Registrarse", color = Color.White)
+                Button(
+                    onClick = { onSignInClick() },
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f) // Ajuste al 70% del ancho de la pantalla para adaptabilidad
+                        .padding(vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF24C4E6)
+                    ),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Text("Iniciar Sesión", color = Color.Black)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = { onRegisterClick() },
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f) // Ajuste al 70%
+                        .padding(vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF24C4E6)
+                    ),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Text("Registrarse", color = Color.Black)
+                }
             }
         }
     }
 }
+
+
 
